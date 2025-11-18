@@ -7,12 +7,17 @@ from google import genai
 from google.genai import types
 
 # --- Configurazione API Gemini ---
-# Il client cercherà automaticamente la chiave nella variabile d'ambiente GOOGLE_API_KEY
+# Il client legge ESPLICITAMENTE la chiave dalla configurazione segreta di Streamlit (st.secrets)
 try:
-    client = genai.Client()
+    # IMPORTANTE: st.secrets è l'unica via per accedere ai segreti nel cloud Streamlit
+    client = genai.Client(api_key=st.secrets["GOOGLE_API_KEY"])
+except KeyError:
+    # Gestisce l'errore se la chiave è assente dal pannello di Streamlit
+    st.error("ERRORE GRAVE: Chiave 'GOOGLE_API_KEY' non trovata nei Segreti di Streamlit. Inseriscila in Advanced Settings.")
+    sys.exit()
 except Exception as e:
-    # Mostra un errore chiaro se l'API non si inizializza (es. chiave mancante)
-    st.error(f"ERRORE GRAVE: Impossibile inizializzare il client Gemini. Assicurati che la chiave GOOGLE_API_KEY sia configurata correttamente in secrets.toml.")
+    # Cattura altri errori di inizializzazione
+    st.error(f"ERRORE GRAVE: Impossibile inizializzare il client Gemini. Dettaglio: {e}")
     sys.exit()
 
 # Nome del modello da usare per il RAG
